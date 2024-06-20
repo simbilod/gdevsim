@@ -1,0 +1,107 @@
+type: semiconductor
+mobility:
+  constant:
+    MUN: 3.90000000e+03
+    MUP: 1.90000000e+03
+  doping_arora: # From Arnold
+    MUMN: 0
+    MUMEN: 0
+    MU0N: 4.5E3
+    MU0EN: 0
+    NREFN: 1.0e17
+    NREFNE: 0
+    ALPHA0N: 0.45
+    ALPHAEN: 0
+    MUMP: 0
+    MUMEP: 0
+    MU0P: 2900 # 2.9E3
+    MU0EP: 0
+    NREFP: 1.0E17
+    NREFPE: 0
+    ALPHA0P: 0.45
+    ALPHAEP: 0
+  # doping_arora:
+  #   MUMN: 88
+  #   MUMEN: -0.57
+  #   MU0N: 1252 # 7.4e8
+  #   MU0EN: -2.33
+  #   NREFN: 1.26e17
+  #   NREFNE: 2.4
+  #   ALPHA0N: 0.88
+  #   ALPHAEN: -0.146
+  #   MUMP: 54.3
+  #   MUMEP: -0.57
+  #   MU0P: 407
+  #   MU0EP: -2.23
+  #   NREFP: 2.35e17
+  #   NREFPE: 2.4
+  #   ALPHA0P: 0.88
+  #   ALPHAEP: -0.146
+  # doping_arora:
+  #   MUMN: 3.9E3 # 88
+  #   MUMEN: -1.6 # -0.57
+  #   MU0N: 0 # 1252 # 7.4e8
+  #   MU0EN: 0 # -2.33
+  #   NREFN: 1e17 # 1.26e17
+  #   NREFNE: 0 # 2.4
+  #   ALPHA0N: 0 # 0.88
+  #   ALPHAEN: 0 # -0.146
+  #   MUMP: 1.9E3 # 54.3
+  #   MUMEP: -2.3 # -0.57
+  #   MU0P: 0 # 407
+  #   MU0EP: 0 # -2.23
+  #   NREFP: 1E17 # 2.35e17
+  #   NREFPE: 0 # 2.4
+  #   ALPHA0P: 0 # 0.88
+  #   ALPHAEP: 0 # -0.146
+  # highfield_canali: # From Arnold Ge
+  #   BETAN0: 1.109
+  #   BETANE: 0.66
+  #   BETAP0: 1.213
+  #   BETAPE: 0.17
+  #   VSATN0: 7E6
+  #   VSATNE: -0.87
+  #   VSATP0: 6.3E6
+  #   VSATPE: -0.52
+  highfield_canali:
+    BETAN0: 1.109
+    BETANE: 0.66
+    BETAP0: 1.213
+    BETAPE: 0.17
+    VSATN0: 1E7
+    VSATNE: 0.87
+    VSATP0: 8.37E6
+    VSATPE: 0.52
+general:
+  eps_r: 1.62000000e+01
+bandstructure:
+  NC300: 1.02e19          # 1/cm^3, calculated from https://www.ioffe.ru/SVA/NSM/Semicond/Ge/bandstr.html, going from NC = aT^(3/2) = NC300*(T/300)^3/2 --> NC300 = a * 300^(3/2)
+  NV300: 4.99e18          # 1/cm^3, calculated from https://www.ioffe.ru/SVA/NSM/Semicond/Ge/bandstr.html, going from NV = aT^(3/2) = NV300*(T/300)^3/2 --> NV300 = a * 300^(3/2)
+  EG300: 0.661            # eV, from https://www.ioffe.ru/SVA/NSM/Semicond/Ge/bandstr.html
+  EGALPH: 4.8e-4          # eV/K, calculated from https://www.ioffe.ru/SVA/NSM/Semicond/Ge/bandstr.html
+  EGBETA: 235             # K, calculated from https://www.ioffe.ru/SVA/NSM/Semicond/Ge/bandstr.html
+  Affinity: 4             # eV, https://www.virginiasemi.com/pdf/generalpropertiesSi62002.pdf
+  bandgapnarrowing_slotboom:
+    V0.BGN: 9.0E-3
+    N0.BGN: 1.0E17
+    CON.BGN: 0.5
+generation_recombination:
+  bulkSRH:
+    taun0: 1.5e-009
+    taup0: 1.5e-009
+    Nrefp_SRH: 1E16
+    Nrefn_SRH: 1E16
+    alpha_SRH_N: 1
+    alpha_SRH_T: -1.5
+  optical_generation:
+    quantum_efficiency: 1
+interfaces:
+  surfaceSRH:
+    silicon:
+      sp: 225000
+      sn: 225000
+      eta_s: -3.8
+    silicon_dioxide:
+      sp: 225000
+      sn: 225000
+      eta_s: -3.8

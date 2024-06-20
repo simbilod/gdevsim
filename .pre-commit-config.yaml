@@ -1,0 +1,25 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "9260cbc9c84c06022993bfbcc42fdbf0305c5b8e"
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: name-tests-test
+        args: ["--pytest-test-first"]
+      - id: trailing-whitespace
+
+  - repo: https://github.com/hakancelikdev/unimport
+    rev: 1.2.1
+    hooks:
+      - id: unimport
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "6a0ba1854991b693612486cc84a2254de82d071d"
+    hooks:
+      - id: ruff

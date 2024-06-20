@@ -1,0 +1,3 @@
+type: metal
+general:
+  conductivity: 5.96e7 # S/m, need to convert to S/cm

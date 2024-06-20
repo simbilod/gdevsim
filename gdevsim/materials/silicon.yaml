@@ -1,0 +1,64 @@
+type: semiconductor
+general:
+  eps_r: 1.17000000e+01
+bandstructure:
+  NC300: 3.222e19  # 1/cm^3
+  NV300: 1.819e19  # 1/cm^3
+  EG300: 1.12452    # eV
+  EGALPH: 4.73e-4  # eV/K
+  EGBETA: 636        # K
+  Affinity: 4.05   # eV, e.g. https://eesemi.com/sigegaas.htm
+  bandgapnarrowing_slotboom:
+    V0.BGN: 9.0E-3
+    N0.BGN: 1.0E17
+    CON.BGN: 0.5
+mobility:
+  constant:
+    MUN: 1.40e03
+    MUP: 4.50e02
+  doping_arora:
+    MUMN: 88
+    MUMEN: -0.57
+    MU0N: 1252 # 7.4e8
+    MU0EN: -2.33
+    NREFN: 1.26e17
+    NREFNE: 2.4
+    ALPHA0N: 0.88
+    ALPHAEN: -0.146
+    MUMP: 54.3
+    MUMEP: -0.57
+    MU0P: 407
+    MU0EP: -2.23
+    NREFP: 2.35e17
+    NREFPE: 2.4
+    ALPHA0P: 0.88
+    ALPHAEP: -0.146
+  highfield_canali:
+    BETAN0: 1.109
+    BETANE: 0.66
+    BETAP0: 1.213
+    BETAPE: 0.17
+    VSATN0: 1E7
+    VSATNE: 0.87
+    VSATP0: 8.37E6
+    VSATPE: 0.52
+generation_recombination:
+  bulkSRH:
+    taun0: 1.00000000e-05
+    taup0: 3.00000000e-06
+    Nrefp_SRH: 1E16
+    Nrefn_SRH: 1E16
+    alpha_SRH_N: 1
+    alpha_SRH_T: -1.5
+  optical_generation:
+    quantum_efficiency: 0
+interfaces:
+  surfaceSRH:
+    germanium:
+      sp: 225000
+      sn: 225000
+      eta_s: -3.8
+    silicon_dioxide:
+      sp: 225000
+      sn: 225000
+      eta_s: -3.8

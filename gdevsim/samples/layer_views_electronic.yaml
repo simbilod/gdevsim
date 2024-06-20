@@ -1,0 +1,51 @@
+LayerViews:
+  POLY:
+    layer: [1, 0]
+    color: "#FF0000"  # Red
+    pattern: "solid"
+    description: "Polysilicon"
+  N_WELL:
+    layer: [2, 0]
+    color: "#00FF00"  # Green
+    pattern: "dotted"
+    description: "N-Well"
+  P_WELL:
+    layer: [3, 0]
+    color: "#0000FF"  # Blue
+    pattern: "dashed"
+    description: "P-Well"
+  M1:
+    layer: [51, 0]
+    color: "#FFFF00"  # Yellow
+    pattern: "solid"
+    description: "Metal 1"
+  VIA1:
+    layer: [61, 0]
+    color: "#FF00FF"  # Magenta
+    pattern: "solid"
+    description: "Via 1"
+  M2:
+    layer: [52, 0]
+    color: "#00FFFF"  # Cyan
+    pattern: "solid"
+    description: "Metal 2"
+  VIA2:
+    layer: [62, 0]
+    color: "#FFA500"  # Orange
+    pattern: "solid"
+    description: "Via 2"
+  M3:
+    layer: [53, 0]
+    color: "#A52A2A"  # Brown
+    pattern: "solid"
+    description: "Metal 3"
+  VIA3:
+    layer: [63, 0]
+    color: "#800080"  # Purple
+    pattern: "solid"
+    description: "Via 3"
+  MTOP:
+    layer: [50, 0]
+    color: "#808080"  # Grey
+    pattern: "solid"
+    description: "Top Metal"
