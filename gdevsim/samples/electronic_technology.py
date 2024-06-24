@@ -1,4 +1,6 @@
 
+from dataclasses import dataclass
+
 import gdsfactory as gf
 from gdsfactory.technology import (
     LayerLevel,
@@ -88,9 +90,6 @@ class ElectronicLayerViews(LayerViews):
 
 
 LAYER_VIEWS = ElectronicLayerViews(layers=LAYER)
-
-
-from dataclasses import dataclass
 
 
 @dataclass

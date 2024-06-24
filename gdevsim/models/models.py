@@ -329,7 +329,7 @@ def create_generation_recombination(
 
     # Initialize electron and hole recombination expressions
     Gn = "0"
-    Gp = "0" 
+    Gp = "0"
 
     """
     OPTICAL GENERATION
@@ -401,7 +401,7 @@ def create_generation_recombination(
                 USRH_surface += f"+ (Electrons*Holes - NIE^2)/((Electrons + NIE)/{sp_T} + (Holes + NIE)/{sn_T}) * {at_interface_name}"
 
         Gn += " - q * USRH_surface"
-        Gp += " + q * USRH_surface"   
+        Gp += " + q * USRH_surface"
 
         create_node_model(device, region, "USRH_surface", USRH_surface)
         for i in ("Electrons", "Holes", "T"):

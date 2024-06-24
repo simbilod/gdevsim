@@ -2,7 +2,7 @@ import copy
 
 import gdsfactory as gf
 import gdstk
-from gdsfactory.typings import Component, LayerStack, Layers
+from gdsfactory.typings import Component, Layers, LayerStack
 
 
 def get_component_layer_stack(
@@ -19,7 +19,7 @@ def get_component_layer_stack(
 
     Returns:
         new_layer_stack: without layers that do not appear in component.
-    """   
+    """
     new_layer_stack = layer_stack.model_copy()
 
     layers_present = component.layers

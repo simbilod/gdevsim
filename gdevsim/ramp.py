@@ -4,10 +4,10 @@ Improvements:
     - clump contacts together
     - more step size adaptivity
 """
-import devsim as ds
 from dataclasses import dataclass
-from typing import List
 from pathlib import Path
+
+import devsim as ds
 
 from gdevsim.models.models import get_contact_bias_name
 
@@ -15,7 +15,7 @@ from gdevsim.models.models import get_contact_bias_name
 @dataclass
 class RampParameters:
     contact_name: str
-    biases: List[float]
+    biases: list[float]
     initial_step_size:  float | None = None
     maximum_step_size:  float | None = None
     step_size_scaling_down: float = 4
@@ -26,22 +26,22 @@ class RampParameters:
     abs_error: float = 1E10
     save_intermediate_structures_root: str | None = "ramp"
     save_directory: Path | None = None
-    intermediate_structures: List[Path] | None = None
-    
-    def get_intermediate_structures_filenames(self) -> List[str]:
+    intermediate_structures: list[Path] | None = None
+
+    def get_intermediate_structures_filenames(self) -> list[str]:
         """Return list of filenames for intermediate structures"""
         return [f"{self.save_intermediate_structures_root}_{self.contact_name}_{bias}.ds" for bias in self.biases]
-    
-    def get_intermediate_structures_filepaths(self) -> List[Path]:
+
+    def get_intermediate_structures_filepaths(self) -> list[Path]:
         """Return list of filepaths for intermediate structures"""
         return self.intermediate_structures
-    
+
     def add_intermediate_structures_filepath(self, path):
         self.intermediate_structures.append(path)
 
     def clear_intermediate_structures_filepath(self):
         self.intermediate_structures = []
-    
+
 
 def rampbias(
     device,

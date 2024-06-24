@@ -16,21 +16,22 @@
 #
 # Insulators are defined as materials whose bandgaps >> relevant energy scales of the simulation. Hence, they only support bound charge, leaving only an electric field:
 #
-# * **Parameters**: 
+# * **Parameters**:
 #     * Relative permittivity $\epsilon_r$ (unitless)
-# * **Node Solutions**: 
+# * **Node Solutions**:
 #     * Electrostatic potential $\varphi(\bm{x})$ (V)
-# * **Equations**: 
+# * **Equations**:
 #     * Coulomb' law $\nabla^2 \varphi = 0$
 #
 # <div class="alert alert-success">
-# Notes: 
+# Notes:
 #
 # * No free charge is assumed present
 # </div>
 
 # +
 from gdevsim.materials.materials import get_all_materials
+
 materials = get_all_materials()
 
 for material_name, material in materials.items():

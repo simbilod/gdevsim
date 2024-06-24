@@ -1,6 +1,12 @@
 import numpy as np
 import pytest
-from gdevsim.doping.profile_impulses import constant_impulse, gaussian_impulse, skewed_gaussian_impulse
+
+from gdevsim.doping.profile_impulses import (
+    constant_impulse,
+    gaussian_impulse,
+    skewed_gaussian_impulse,
+)
+
 
 @pytest.mark.parametrize("ymax, ymax_offset, y_depth, expected_results", [
     (5, -1, 3, [1, 1, 1, 0, 0, 0]),  # Basic case

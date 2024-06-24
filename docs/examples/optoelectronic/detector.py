@@ -21,19 +21,16 @@
 # %autoreload 2
 
 
-import devsim as ds
-import matplotlib.pyplot as plt
-import meshio
-import numpy as np
-import pyvista as pv
-import scipy
-import shapely
 import warnings
-from gdevsim.simulation import DevsimComponent
-from gdevsim.visualization import get_distinguishable_colors
-from gdevsim.samples.layers_photonic import get_layer_stack_photonic, LAYER
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from gdevsim import ramp
+from gdevsim.materials.materials import get_global_parameters
+from gdevsim.samples.layers_photonic import get_layer_stack_photonic
 from gdevsim.samples.optoelectronic import vertical_ge_detector
-from gdevsim.samples.layers_photonic import get_layer_stack_photonic 
+from gdevsim.simulation import DevsimComponent
 
 warnings.filterwarnings('ignore')
 # -
@@ -48,7 +45,6 @@ layer_stack_photonic = get_layer_stack_photonic()
 # We use gplugins to mesh half of the component cross-section (since it is symmetric), keeping the layer stack labels for the moment:
 
 # +
-from gdevsim.materials.materials import get_global_parameters
 
 resolutions = {
     "core": {"resolution": 0.01, "distance": 2.0},
@@ -84,7 +80,7 @@ physics = {
         "germanium": {
             "bandstructure": ("bandgapnarrowing_slotboom",),
             # "mobility": ("doping_arora",), #, "highfield_canali"),
-            "mobility": ("doping_arora",),               
+            "mobility": ("doping_arora",),
             "generation_recombination": ("bulkSRH", "surfaceSRH", "optical_generation"),
             # "generation_recombination": ("bulkSRH",),
         },
@@ -117,10 +113,10 @@ simulation.write(file=simulation.save_directory / "test_filter.dat", type="tecpl
 # mesh = reader.read()
 # plotter = pv.Plotter(notebook=True)
 # # plotter = pv.Plotter(window_size=(1200, 1000))
-# plotter.add_mesh(mesh, 
-#                  scalars="AtContactNode", 
-#                  cmap="inferno", 
-#                  lighting=False, 
+# plotter.add_mesh(mesh,
+#                  scalars="AtContactNode",
+#                  cmap="inferno",
+#                  lighting=False,
 #                  show_edges=True,
 #                  edge_color="grey",
 #                  line_width=0.1,
@@ -128,12 +124,10 @@ simulation.write(file=simulation.save_directory / "test_filter.dat", type="tecpl
 # plotter.view_xy()
 # plotter.show(jupyter_backend='static')
 
-from gdevsim.utils.operations import signed_log
 # simulation.plot2D(field="NetDoping", field_operation=signed_log)
 
 # +
 # Apply remeshing
-from gdevsim.meshing import refinement
 
 # steps = []
 # bisections = []
@@ -172,9 +166,6 @@ simulation.solve(threads_available=10,
 
 
 # # +
-# import matplotlib.pyplot as plt
-# import seaborn as sns
-# import pandas as pd
 
 # # Prepare data for seaborn
 # for i in range(len(remeshings_sequence)):
@@ -208,9 +199,8 @@ simulation.write(file = simulation.save_directory / "device_0V.ds")
 
 simulation.write(file = simulation.save_directory / "device_0V.dat", type="tecplot")
 
-from gdevsim import ramp
-ramp_parameters = ramp.RampParameters(contact_name="anode", 
-                                      biases=[-1], 
+ramp_parameters = ramp.RampParameters(contact_name="anode",
+                                      biases=[-1],
                                       initial_step_size=1E-1,
                                       min_step=1E-7,
                                       rel_error=1E-12,
@@ -226,8 +216,6 @@ simulation.write(file = simulation.save_directory / "device_1V.dat", type="tecpl
 
 
 # +
-import matplotlib.pyplot as plt
-
 plt.figure(figsize=(10, 6))
 
 # Plotting for output_reverse
@@ -268,5 +256,3 @@ plt.xlabel("Temperature (C)")
 plt.ylabel("Dark current (uA)")
 plt.yscale('log')
 plt.show()
-
-

@@ -16,13 +16,13 @@
 #
 # Semiconductors are defined as materials with a bandgap ~ energy scales of the problem. Hence, they exhibit variable concentrations of mobile charge, greatly affecting conduction. This is mainly determined by the introduction of impurity atoms having more (donors) or less (acceptors) outer shell electrons. Furthermore, various mechanisms can act as sinks (recombination $R$) or sources (generation $G$) of mobile charge.
 #
-# * **Parameters**: 
+# * **Parameters**:
 #     * Acceptor concentration $N_A(\bm{x})$ (/cm3)
 #     * Donor concentration $N_D(\bm{x})$ (/cm3)
 #     * Band models + parameters
 #     * Mobility models + parameters $\mu_e(...), \mu_h(...)$
 #     * Recombination-generation models + parameters $R(...), G(...)$
-# * **Node solutions**: 
+# * **Node solutions**:
 #     * Electrostatic potential $\varphi (\bm{x})$ (V)
 #     * Electron concentration $n_e(\bm{x})$ (/cm3)
 #     * Hole concentration $n_h(\bm{x})$ (/cm3)
@@ -31,24 +31,24 @@
 #     * Electron diffusion current $\bm{J}_e = q n_e \mu_e \nabla n_e(x)$
 #     * Hole drift current $\bm{J}_h = q n_h \mu_h \nabla V$
 #     * Coulomb' law: $\epsilon_r \nabla^2 \varphi = q \left( n_h(x) - n_e(x) + N_D(x) - N_A(x) \right)$
-#     * Electron continuity: 
-#     * Hole continuity: 
+#     * Electron continuity:
+#     * Hole continuity:
 #
 # We instanciate generic simulations to benchmark the parameters:
 
 # +
-import numpy as np
+import gdsfactory as gf
 import matplotlib.pyplot as plt
-import seaborn as sns
+import numpy as np
 import pandas as pd
 import ray
-import gdsfactory as gf
-from gdsfactory.typings import Tuple
 from gdsfactory.technology import LayerLevel, LayerStack
-from gdevsim.simulation import DevsimComponent
+from IPython.display import display
+
 from gdevsim.config import Path
-from gdevsim.materials.materials import get_all_materials
-from gdevsim.materials.materials import get_global_parameters
+from gdevsim.materials.materials import get_all_materials, get_global_parameters
+from gdevsim.simulation import DevsimComponent
+
 all_materials = get_all_materials()
 
 ray.init(log_to_driver=False)
@@ -57,9 +57,9 @@ ray.init(log_to_driver=False)
 # -
 
 @ray.remote
-def carriers_from_simulation(material: str, 
-                        T: float, 
-                        doping_conc: float, 
+def carriers_from_simulation(material: str,
+                        T: float,
+                        doping_conc: float,
                         doping_type: str,
                         ):
     """Test object to check how carrier models is implemented in simulations.
@@ -148,7 +148,6 @@ for temperature in temperatures:
 
 # +
 carrier_data = ray.get(carrier_calculations)
-import pandas as pd
 
 # Create a DataFrame from the list of dictionaries
 carrier_df = pd.DataFrame(carrier_data)
@@ -160,11 +159,9 @@ carrier_df = pd.DataFrame(carrier_data)
 #
 # $$ E_G = E_{G0} + \alpha \left( \frac{T_0^2}{T_0 + \beta} - \frac{T^2}{T + \beta} \right) $$
 #
-# where $T_{0} = 300K$ is a reference temperature, and $E_{G0}$ the bandgap at the reference temperature. 
+# where $T_{0} = 300K$ is a reference temperature, and $E_{G0}$ the bandgap at the reference temperature.
 
 # +
-import pandas as pd
-
 # Create an empty list to store the data
 bandstructure_data = []
 
@@ -184,7 +181,7 @@ for material_name, material in all_materials.items():
 bandstructure_df = pd.DataFrame(bandstructure_data)
 
 # Apply style to the DataFrame for better visualization
-display(bandstructure_df.style.format(lambda x: "{:.3e}".format(x) if not isinstance(x, str) else x).set_properties(**{'background-color': 'black', 'color': 'white', 'border-color': 'gray'}))
+display(bandstructure_df.style.format(lambda x: f"{x:.3e}" if not isinstance(x, str) else x).set_properties(**{'background-color': 'black', 'color': 'white', 'border-color': 'gray'}))
 
 
 # +
@@ -214,7 +211,7 @@ for material_name, material in all_materials.items():
         plt.plot(temperature_range, bandgaps, 'r-', label='reference')
         plt.scatter(data['T'], data['EG'], color='b', label='simulation')
         plt.xlabel('Temperature (K)')
-        plt.ylabel('Bandgap (eV), for $\Delta E_G = 0$')
+        plt.ylabel('Bandgap (eV), for $\\Delta E_G = 0$')
         plt.title(material_name)
         plt.legend()
         plt.grid(True)
@@ -228,9 +225,9 @@ for material_name, material in all_materials.items():
 #
 # $$ \Delta E_G = E_{BGN} * \left(\log\left(\frac{N_{tot}}{N_{ref}} \right) + \sqrt{\left( \log\left( \frac{N_{tot}}{N_{ref}} \right)\right)^2 + C_{BGN}} \right) $$
 #
-# where $N_{tot} = N_A + N_D$ is the total local concentration of impurities. 
+# where $N_{tot} = N_A + N_D$ is the total local concentration of impurities.
 #
-# Compare to data compiled in 
+# Compare to data compiled in
 #
 # [1] R. J. Van Overstraeten and R. P. Mertens, “Heavy doping effects in silicon,” Solid-State Electronics, vol. 30, no. 11, pp. 1077–1087, Nov. 1987, doi: 10.1016/0038-1101(87)90070-0.
 #
@@ -270,7 +267,7 @@ def ref_bgn(c, material):
             return E0BGN * ( np.log(c/N0BGN) + np.sqrt( (np.log(c/N0BGN))**2 + CONBGN ) )
     else:
         raise ValueError(f"Material {material} has no reference!")
-    
+
 
 for material_name, material in all_materials.items():
     if material["type"] == "semiconductor":
@@ -312,7 +309,7 @@ def ref_DOS_V(T, material):
         return 9.6 * 1E14 * T**(3/2)
     else:
         raise ValueError(f"Material {material} has no reference!")
-    
+
 def ref_DOS_C(T, material):
     if material == "silicon":
         # Silicon

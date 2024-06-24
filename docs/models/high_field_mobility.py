@@ -26,26 +26,23 @@
 #
 # Below, $T_{ref}$ is always taken to be $300$ K.
 
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-import ray
 import gdsfactory as gf
-from gdsfactory.typings import Tuple
+import numpy as np
+import ray
 from gdsfactory.technology import LayerLevel, LayerStack
+from gdsfactory.typings import Tuple
+
+from gdevsim.materials.materials import get_all_materials, get_global_parameters
 from gdevsim.simulation import DevsimComponent
-from gdevsim.config import Path
-from gdevsim.materials.materials import get_all_materials
-from gdevsim.materials.materials import get_global_parameters
+
 materials = get_all_materials()
 
 
 @ray.remote
-def mobility_from_simulation(material: str, 
+def mobility_from_simulation(material: str,
                         mobility: Tuple[str],
                         T: float,
-                        channel_width: float = 1, 
+                        channel_width: float = 1,
                         ):
     """Test object to check how mobility is implemented in simulations.
 
@@ -157,7 +154,7 @@ materials = ["silicon", "germanium"]
 mobility_calculations = []
 
 for temperature in temperatures:
-    for voltage in voltages:
+    for _voltage in voltages:
         for material in materials:
             mobility_calculations.append(mobility_from_simulation.remote(material=material,
                                 mobility=("doping_arora", "highfield_canali"),

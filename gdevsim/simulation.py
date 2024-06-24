@@ -656,7 +656,7 @@ class DevsimComponent(LayeredComponentBase):
             plotter.show(title=title)
         plotter.show()
 
-    
+
     def get_parameter(self, parameter: str, region: str):
         return ds.get_parameter(device=self.device_name, region=region, name=parameter)
 

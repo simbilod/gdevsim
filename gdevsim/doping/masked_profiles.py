@@ -1,7 +1,7 @@
+from collections.abc import Callable
+
 import numpy as np
 import scipy
-from shapely import Polygon
-from typing import Callable, Tuple, Dict, Any
 from gdsfactory.typings import LayerStack
 
 from gdevsim.doping.parse_layer_stack_dopings import deserialize_profile
@@ -13,7 +13,7 @@ def masked_implant_profile_uz(
     ymax: float,
     impulse_function: Callable,
     peak_concentration: float = 1.0,
-    x_bounds: Tuple[Tuple[float, float]] = None,
+    x_bounds: tuple[tuple[float, float]] = None,
 ) -> np.ndarray:
     """
     This function generates an implant profile over a domain from an impulse and a mask.
@@ -49,16 +49,16 @@ def masked_implant_profile_uz(
 
 def project_profiles_uz(
     layer_stack_geometry: LayerStack,
-    doping_data: Dict,
+    doping_data: dict,
     rel_xbuffer: float = 0.2,
     rel_ybuffer: float = 0.2,
     Nx: int = 1000,
     Ny: int = 200,
-    doping_fields: Tuple = ("acceptor", "donor"),
-) -> Dict:
+    doping_fields: tuple = ("acceptor", "donor"),
+) -> dict:
     """Project the combined doping profiles onto a structured grid having roughly the coordinates of the target regions.
 
-    TODO: 
+    TODO:
         * Use a dataclass for doping_data instead of a dict
         * Unit test
 

@@ -1,6 +1,7 @@
+import pytest
+
 from gdevsim.contacts import parse_contact_interface
 
-import pytest
 
 def test_parse_contact_interface_standard():
     # Test case with expected output
@@ -25,5 +26,3 @@ def test_parse_contact_interface_missing_delimiters():
     contact_interface = "regionEregionF"
     with pytest.raises(ValueError):
         parse_contact_interface(contact_interface)
-
-

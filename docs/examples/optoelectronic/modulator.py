@@ -23,12 +23,24 @@
 from pprint import pprint
 
 import gdsfactory as gf
-import numpy as np
-
-gf.config.CONF.logger.disable = True
+import matplotlib.pyplot as plt
 import meshio
+import numpy as np
+import yaml
+from femwell.maxwell.waveguide import compute_modes
+from femwell.pn_analytical import (
+    alpha_to_k,
+    dalpha_carriers,
+    dn_carriers,
+)
+from femwell.visualization import plot_domains
 from gdsfactory.cross_section import pn
+from scipy.interpolate import LinearNDInterpolator
+from skfem import Basis, ElementTriP0
+from skfem.io.meshio import from_meshio
 
+from gdevsim import ramp
+from gdevsim.meshing import refinement
 from gdevsim.samples.layers_photonic import LAYER, get_layer_stack_photonic
 from gdevsim.samples.optoelectronic import (
     straight_pn,
@@ -37,6 +49,10 @@ from gdevsim.samples.optoelectronic import (
     viac,
 )
 from gdevsim.simulation import DevsimComponent
+from gdevsim.utils.operations import signed_log
+
+gf.config.CONF.logger.disable = True
+
 
 # +
 # Edit the Component geometry
@@ -138,8 +154,6 @@ output_filename = simulation.initialize(
 # While we could use the device as-is, it is good practice to refine the mesh in regions where fields change quickly. This is easily achieved with remeshing operations:
 # +
 # Apply remeshing
-from gdevsim.meshing import refinement
-from gdevsim.utils.operations import signed_log
 
 steps = []
 bisections = []
@@ -174,9 +188,6 @@ for i, (max_iterations, solver_relative_errors, remeshings, solve_flag) in enume
     bisections.append(current_bisections)
 
 # +
-# import matplotlib.pyplot as plt
-# import seaborn as sns
-# import pandas as pd
 
 # # Prepare data for seaborn
 # for i in range(len(remeshings_sequence)):
@@ -211,8 +222,6 @@ for i, (max_iterations, solver_relative_errors, remeshings, solve_flag) in enume
 simulation.write(file = simulation.save_directory / "device_0V.ds")
 
 # We can now ramp the bias:
-from gdevsim import ramp
-
 ramp_parameters = ramp.RampParameters(contact_name="anode", biases=np.linspace(0, 1, 11), save_intermediate_structures_root="ramp")
 
 simulation.load(file = simulation.save_directory / "device_0V.ds")
@@ -223,8 +232,6 @@ simulation.load(file = simulation.save_directory / "device_0V.ds")
 output_reverse = simulation.ramp_dc_bias(ramp_parameters=ramp_parameters)
 
 # +
-import matplotlib.pyplot as plt
-
 plt.figure(figsize=(10, 6))
 
 # Plotting for output_forward
@@ -248,8 +255,6 @@ plt.show()
 # We can inspect the charge densities:
 
 # +
-import yaml
-
 files_with_voltage = []
 for f in simulation.save_directory.iterdir():
     if (f.name.startswith("ramp") and f.name.endswith(".ds")):
@@ -268,7 +273,7 @@ holes_cut = {}
 positions = np.array([(x, y_mid) for x in xs])
 
 sorted_files = sorted(files_with_voltage, key=lambda x: x[1])
-for i, (file, voltage) in enumerate(sorted_files[:10]):
+for _i, (file, voltage) in enumerate(sorted_files[:10]):
     simulation.load(file=file)
     simulation.plot2D(field="Electrons",
                         field_operation=signed_log,
@@ -285,7 +290,7 @@ for i, (file, voltage) in enumerate(sorted_files[:10]):
 
 cmap = plt.get_cmap("viridis")
 colors = cmap(np.linspace(0, 1, len(electrons_cut)))
-for i, (voltage, color) in enumerate(zip(electrons_cut.keys(), colors)):
+for _i, (voltage, color) in enumerate(zip(electrons_cut.keys(), colors)):
     plt.plot(xs, holes_cut[voltage], linestyle="--", color=color)
     plt.plot(xs, electrons_cut[voltage], linestyle="-", color=color, label=f"{voltage:1.1f} V")
 plt.xlabel("x-position (cm)")
@@ -300,13 +305,6 @@ plt.title("y = 110 nm cut")
 # Since `femwell` can directly use the simulation mesh, it is easy to get the unperturbed mode:
 
 # +
-import matplotlib.pyplot as plt
-import meshio
-import numpy as np
-from femwell.maxwell.waveguide import compute_modes
-from femwell.visualization import plot_domains
-from skfem import Basis, ElementTriP0
-from skfem.io.meshio import from_meshio
 
 filepath = simulation.save_directory / simulation.mesh_filename # use the initial mesh
 mesh = meshio.read(filepath, file_format='gmsh')
@@ -349,13 +347,6 @@ plt.tight_layout()
 simulation.load(file = simulation.save_directory / "device_0V.ds")
 
 # +
-from femwell.pn_analytical import (
-    alpha_to_k,
-    dalpha_carriers,
-    dn_carriers,
-    k_to_alpha_dB,
-)
-from scipy.interpolate import LinearNDInterpolator
 
 x = simulation.get_node_field_values(field="x", regions=["core","clad"])
 y = simulation.get_node_field_values(field="y", regions=["core","clad"])
@@ -419,7 +410,7 @@ neff_p
 # +
 neffs = {}
 
-for i, (file, voltage) in enumerate(sorted_files[:10]):
+for _i, (file, voltage) in enumerate(sorted_files[:10]):
     simulation.load(file=file)
     x = simulation.get_node_field_values(field="x", regions=["core","clad"])
     y = simulation.get_node_field_values(field="y", regions=["core","clad"])
@@ -439,14 +430,14 @@ for i, (file, voltage) in enumerate(sorted_files[:10]):
     dk_df = dk_interp(XX, YY)
 
     dn_Si = np.nan_to_num(modes[0].basis_epsilon_r.project(
-            lambda x: dn_interp(x[0], x[1]) -1j*dk_interp(x[0], x[1]),
+            lambda x: dn_interp(x[0], x[1]) -1j*dk_interp(x[0], x[1]), # noqa: B023
             dtype=complex,
             )
         )
 
     dn = modes[0].basis_epsilon_r.zeros(dtype=complex)
     dn_Si = np.nan_to_num(modes[0].basis_epsilon_r.project(
-            lambda x: dn_interp(x[0], x[1]) -1j*dk_interp(x[0], x[1]),
+            lambda x: dn_interp(x[0], x[1]) -1j*dk_interp(x[0], x[1]), # noqa: B023
             dtype=complex,
             )
         )
@@ -467,10 +458,10 @@ for i, (file, voltage) in enumerate(sorted_files[:10]):
     neffs[voltage] = mode.calculate_pertubated_neff(epsilon - mode.epsilon_r)
 # -
 
-plt.plot(neffs_df["voltage"], np.real(neffs_df["neff"]))
-plt.xlabel("Voltage (V)")
-plt.ylabel("Effective index shift (a.u.)")
+# plt.plot(neffs_df["voltage"], np.real(neffs_df["neff"]))
+# plt.xlabel("Voltage (V)")
+# plt.ylabel("Effective index shift (a.u.)")
 
-plt.plot(neffs_df["voltage"], k_to_alpha_dB(np.imag(neffs_df["neff"]), wavelength=1.55))
-plt.xlabel("Voltage (V)")
-plt.ylabel("Absorption (dB/cm)")
+# plt.plot(neffs_df["voltage"], k_to_alpha_dB(np.imag(neffs_df["neff"]), wavelength=1.55))
+# plt.xlabel("Voltage (V)")
+# plt.ylabel("Absorption (dB/cm)")

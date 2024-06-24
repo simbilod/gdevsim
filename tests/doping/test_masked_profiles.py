@@ -1,8 +1,9 @@
 import numpy as np
 import pytest
-from gdevsim.doping.masked_profiles import masked_implant_profile_uz
 
+from gdevsim.doping.masked_profiles import masked_implant_profile_uz
 from gdevsim.doping.profile_impulses import gaussian_impulse
+
 
 @pytest.mark.parametrize("ymax, peak_concentration, x_bounds, range, vertical_straggle, lateral_straggle", [
     (5, 2.0, [(-3, -1), (1, 3)], 1.0, 0.1, 0.1),  # Standard case

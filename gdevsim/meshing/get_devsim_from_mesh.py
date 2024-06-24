@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import devsim as ds
+
 from gdevsim.contacts import parse_contact_interface
 from gdevsim.meshing.parse_gmsh import get_fix_interfaces
 

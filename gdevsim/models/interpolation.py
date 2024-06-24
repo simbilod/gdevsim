@@ -3,7 +3,7 @@ from collections.abc import Callable
 import devsim as ds
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator, griddata
-from shapely import Polygon, Point
+from shapely import Point, Polygon
 
 
 def add_structured_data_to_mesh(

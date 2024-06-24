@@ -11,21 +11,20 @@ Improvements:
     - remeshing criteria log difference with threshold for automatic stop
     - cleanup code
 """
+import shutil
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-import shutil
-
-from typing import Dict
 
 import devsim as ds
 import dill
 import gdsfactory as gf
 import numpy as np
 
-from gdevsim.simulation import initialize, override_field_values, solve
-from gdevsim.utils.operations import thresholded_log_difference, identity
 from gdevsim import ramp
+from gdevsim.simulation import initialize, override_field_values, solve
+from gdevsim.utils.operations import identity, thresholded_log_difference
+
 
 @dataclass
 class RemeshingStrategy:
@@ -484,7 +483,7 @@ def prepare_field_initialization_override_dict(device_name, remeshings):
 
 def remesh_structure(
     # Device biases
-    restart_parameters: Dict | None = None,
+    restart_parameters: dict | None = None,
     remeshings=default_remeshing_presolve,
     device_settings_filepath: Path = None,
     default_mincl: float = 0.0005,  # 0.5 nm
@@ -577,7 +576,7 @@ def remesh_structure(
                 # Initialize with last values for efficiency
                 override_field_values(device_name=settings["device_name"],
                                     field_initialization_override_dict=field_initialization_override_dict)
-                
+
                 solve(save_directory = settings["save_directory"],
                         device_data_filename = filename,
                         extended_solver = extended_solver,
@@ -589,7 +588,7 @@ def remesh_structure(
                         relative_error = solver_relative_error,
                         maximum_iterations = solver_maximum_iterations,
                     )
-                    
+
                 if save_intermediate_data_root:
                     remeshed_filepath = save_directory / f"{save_intermediate_data_root}_{n}.dat"
                     ds.write_devices(file=str(remeshed_filepath), type="tecplot")

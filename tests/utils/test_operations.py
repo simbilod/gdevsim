@@ -1,6 +1,7 @@
 import numpy as np
-import pytest
-from gdevsim.utils.operations import identity, thresholded_log_difference, signed_log
+
+from gdevsim.utils.operations import identity, signed_log
+
 
 def test_identity():
     data = np.array([1, 2, 3])

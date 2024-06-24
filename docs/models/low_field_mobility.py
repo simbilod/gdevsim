@@ -14,25 +14,30 @@
 
 # # Mobility models
 #
-# Mobility captures the ability of a charge carrier to move in a material under the influence of an electric field. 
+# Mobility captures the ability of a charge carrier to move in a material under the influence of an electric field.
 #
 # In this notebook, we explain different low field mobility mobels implemented in gdevsim, and show that their value after being instanciated in simulations agrees with literature.
 #
 # Below, $T_{ref}$ is always taken to be $300$ K.
 
 # +
-import numpy as np
+import gdsfactory as gf
 import matplotlib.pyplot as plt
-import seaborn as sns
+import numpy as np
 import pandas as pd
 import ray
-import gdsfactory as gf
-from gdsfactory.typings import Tuple
+import seaborn as sns
 from gdsfactory.technology import LayerLevel, LayerStack
-from gdevsim.simulation import DevsimComponent
+from gdsfactory.typings import Tuple
+
 from gdevsim.config import Path
-from gdevsim.materials.materials import get_all_materials
-from gdevsim.materials.materials import get_global_parameters, get_default_physics
+from gdevsim.materials.materials import (
+    get_all_materials,
+    get_default_physics,
+    get_global_parameters,
+)
+from gdevsim.simulation import DevsimComponent
+
 materials = get_all_materials()
 
 ray.init(log_to_driver=False)
@@ -41,10 +46,10 @@ ray.init(log_to_driver=False)
 # -
 
 @ray.remote
-def mobility_from_simulation(material: str, 
+def mobility_from_simulation(material: str,
                         mobility: Tuple[str],
-                        T: float, 
-                        doping_conc: float, 
+                        T: float,
+                        doping_conc: float,
                         doping_type: str,
                         ):
     """Test object to check how mobility is implemented in simulations.
@@ -223,11 +228,11 @@ for idx, temperature in enumerate([200, 300, 400, 500]):  # Iterate over columns
     concentration_col = f"{temperature}_C"
     mobility_col = f"{temperature}_MU"
     color = colors[idx % len(colors)]  # Cycle through the colors list
-    ax.plot(arora_silicon[concentration_col].values, arora_silicon[mobility_col].values, label=f"{temperature} K, reference", color=color)    
-    
+    ax.plot(arora_silicon[concentration_col].values, arora_silicon[mobility_col].values, label=f"{temperature} K, reference", color=color)
+
     mobility_material = mobilities_df[mobilities_df["material"] == "silicon"]
     mobility_T = mobility_material[mobility_material["T"] == temperature]
-    ax.scatter(mobility_T["doping_conc"], mobility_T["n_mobility"], label=f"{temperature} K, simulator", color=color)    
+    ax.scatter(mobility_T["doping_conc"], mobility_T["n_mobility"], label=f"{temperature} K, simulator", color=color)
 
 ax.set_xscale('log')
 ax.set_xlabel('Doping Concentration (cm^-3)')

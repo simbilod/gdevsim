@@ -2,6 +2,7 @@ from math import floor
 
 import gdsfactory as gf
 from gdsfactory.typings import Float2, LayerSpec
+
 from gdevsim.samples.electronic_technology import LAYER
 
 
@@ -25,8 +26,8 @@ def straight_wire(width: float = 10,
 
 
 @gf.cell
-def parallel_plate_capacitor(width: float = 10, 
-                             length: float = 10, 
+def parallel_plate_capacitor(width: float = 10,
+                             length: float = 10,
                              layer1: LayerSpec = LAYER.M1,
                              layer2: LayerSpec = LAYER.M2,
                              ) -> gf.Component:

@@ -37,12 +37,12 @@ def get_default_physics():
 
     return {
         "silicon": {
-            "bandstructure": ("bandgapnarrowing_slotboom",), 
+            "bandstructure": ("bandgapnarrowing_slotboom",),
             "mobility": ("doping_arora", "highfield_canali"),
             "generation_recombination": ("bulkSRH"),
         },
         "germanium": {
-            "bandstructure": ("bandgapnarrowing_slotboom",), 
+            "bandstructure": ("bandgapnarrowing_slotboom",),
             "mobility": ("doping_arora", "highfield_canali"),
             "generation_recombination": ("bulkSRH", "optical_generation"),
             "interfaces": ("surfaceSRH",),

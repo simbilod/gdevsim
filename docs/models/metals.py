@@ -16,10 +16,10 @@
 #
 # Metals are defined as materials with a Fermi level within the conduction band, and with associated carrier distributions also always within the band across simulation conditions. Hence, they always support a fixed density of mobile charge. Therefore, compared to the semiconductors, there are no local charge gradients, and the proportionality of current to electric field reduces to a (possibly temperature-dependent) constant:
 #
-# * **Parameters**: 
-#     * Resistivity $\rho (T)$ (Ohm*cm) 
+# * **Parameters**:
+#     * Resistivity $\rho (T)$ (Ohm*cm)
 #     * Temperature coefficient of resistivity $\alpha_\rho$ ($K^{-1}$)
-# * **Node solutions**: 
+# * **Node solutions**:
 #     * Fermi potential $\varphi_F (\bm{x})$ (V)
 # * **Equations**
 #     * Drift current (Ohm's law) $\bm{J} = - \rho^{-1} \nabla \varphi_F$
@@ -30,14 +30,14 @@
 #     * Metals
 #         * Assume perfect resistance-free ohmic contact
 #             * $\varphi_F^1 = \varphi_F^2$
-#             * 
+#             *
 #     * Insulators
 #         * Continuity
 #     * Semiconductors
 #         * Assume perfect resistance-free ohmic contact
 #
 # <div class="alert alert-success">
-# Notes: 
+# Notes:
 #
 # * Fermi potential is used to distinguish from electrostatic potential that extends into insulators and semiconductors
 # * All interfaces with other metals and semiconductors are assumed ohmic

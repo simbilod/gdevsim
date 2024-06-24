@@ -1,7 +1,6 @@
 import shapely
 from gdsfactory.typings import Component, Dict, LayerStack, Tuple
 from gplugins.gmsh.uz_xsection_mesh import get_u_bounds_polygons
-from gplugins.gmsh.xy_xsection_mesh import apply_effective_buffers
 
 from gdevsim.doping.profile_impulses import function_mapping
 
@@ -32,7 +31,7 @@ def parse_layer_stack_doping_uz(
     """
     This function parses the layer stack doping information from the given layer stack dopings and component.
 
-    TODO: 
+    TODO:
         * Use a dataclass for doping_data instead of a dict
         * Unit test
 
@@ -103,7 +102,7 @@ def parse_layer_stack_doping_xy(
     """
     This function parses the layer stack doping information from the given layer stack dopings and component.
 
-    TODO: 
+    TODO:
         * Use a dataclass for doping_data instead of a dict
         * Unit test
 
