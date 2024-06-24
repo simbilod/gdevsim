@@ -20,7 +20,7 @@ license = {file = "LICENSE"}
 dependencies = [
     "numpy",
     "mkl",
-    "devsim<",
+    "devsim",
     "matplotlib",
     "gdsfactory<7.22.2",
     "gplugins<0.11.0",
