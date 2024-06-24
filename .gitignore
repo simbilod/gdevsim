@@ -153,3 +153,4 @@ cython_debug/
 *.ds
 *.pkl
 *.gds
+simulation/*
