@@ -106,6 +106,7 @@ class DevsimComponent(LayeredComponentBase):
     wafer_layer: tuple[int, int] = (99999, 0)
 
     # Default filenames
+    _save_directory: Path | None = PrivateAttr()
     log_filename: str = "simulation.log"
     error_filename: str = "simulation.err"
     mesh_filename: str = "mesh.msh2"
@@ -114,7 +115,10 @@ class DevsimComponent(LayeredComponentBase):
     simulation_gds_filename: str = "device.gds"
 
     def __init__(self, **data):
+        """Default initialization bypassing pydantic."""
         super().__init__(**data)
+
+        # Make contact names = port names if not specified
         if "port_names_to_contact_names" not in data:
             self._port_names_to_contact_names = {
                 port.name: port.name for port in self.component.get_ports_list()
@@ -122,10 +126,11 @@ class DevsimComponent(LayeredComponentBase):
         else:
             self._port_names_to_contact_names = data["port_names_to_contact_names"]
 
-
-    @property
-    def save_directory(self):
-        return PATH.simulation / str(self.__hash__())
+        # Make _save_directory = default_directory / hash if not specified
+        if "save_directory" not in data:
+            self._save_directory = PATH.simulation / str(self.__hash__())
+        else:
+            self._save_directory = data["save_directory"]
 
     @property
     def device_name(self):
@@ -186,22 +191,22 @@ class DevsimComponent(LayeredComponentBase):
         return simulation_component, simulation_layerstack, contact_name_to_simulation_port_map
 
     def reset(self):
-        """Delete all files in the save_directory."""
-        for item in self.save_directory.glob("*"):
+        """Delete all files in the _save_directory."""
+        for item in self._save_directory.glob("*"):
             if item.is_dir():
                 item.rmdir()
             else:
                 item.unlink()
-        if self.save_directory.exists():
-            self.save_directory.rmdir()
+        if self._save_directory.exists():
+            self._save_directory.rmdir()
 
     def clean_intermediate_files(self):
-        """Deletes all intermediary/temporary files in the save_directory."""
-        for file in self.save_directory.glob("*.msh2"):
+        """Deletes all intermediary/temporary files in the _save_directory."""
+        for file in self._save_directory.glob("*.msh2"):
             file.unlink(missing_ok=True)
-        for file in self.save_directory.glob("*.dat"):
+        for file in self._save_directory.glob("*.dat"):
             file.unlink(missing_ok=True)
-        for file in self.save_directory.glob("*.pos"):
+        for file in self._save_directory.glob("*.pos"):
             file.unlink(missing_ok=True)
 
 
@@ -226,7 +231,7 @@ class DevsimComponent(LayeredComponentBase):
         device_name: str | None = None,
         device_mesh_name: str | None = None,
         # Save files
-        save_directory: Path | str = None,
+        _save_directory: Path | str = None,
         log_filename: str | None = None,
         error_filename: str | None = None,
         mesh_filename: str | None = None,
@@ -259,7 +264,7 @@ class DevsimComponent(LayeredComponentBase):
             reset_save_directory = reset_save_directory,
             print_log = print_log,
             append_to_log = append_to_log,
-            save_directory=save_directory or self.save_directory,
+            _save_directory=_save_directory or self._save_directory,
             log_filename=log_filename or self.log_filename,
             error_filename=error_filename or self.error_filename,
             mesh_filename=mesh_filename or self.mesh_filename,
@@ -284,7 +289,7 @@ class DevsimComponent(LayeredComponentBase):
     ):
         """Initialize the DevsimComponent simulation."""
 
-        save_directory = save_directory or self.save_directory
+        save_directory = save_directory or self._save_directory
         device_data_filename = device_data_filename or self.device_data_filename
 
         return solve(
@@ -304,10 +309,10 @@ class DevsimComponent(LayeredComponentBase):
         """Loads simulation state from a file.
 
         Arguments:
-            file: filename. If None, will be save_directory / device_data_filename.
+            file: filename. If None, will be _save_directory / device_data_filename.
         """
         if file is None:
-            file = self.save_directory / self.device_data_filename
+            file = self._save_directory / self.device_data_filename
         ds.reset_devsim()
         ds.load_devices(file=file)
 
@@ -338,13 +343,13 @@ class DevsimComponent(LayeredComponentBase):
         """Writes the current simulation state to a file.
 
         Arguments:
-            file: filename. If None, will be save_directory / device_data_filename.
+            file: filename. If None, will be _save_directory / device_data_filename.
             type: of data.
             include: list of regex strings determining which fields to save. Default to save all.
             exclude: list of regex strings determining which fields to ignore. Default to not excluding anything.
         """
         if file is None:
-            file = self.save_directory / self.device_data_filename
+            file = self._save_directory / self.device_data_filename
         # ds.write_devices(file=file, device=self.device_name, type=type, include=include, exclude=exclude)
         ds.write_devices(file=file, device=self.device_name, type=type)
 
@@ -431,7 +436,7 @@ class DevsimComponent(LayeredComponentBase):
                                                     })
             total_currents.append(current_total_currents)
             if save_intermediate_structures_root is not None:
-                filepath = self.save_directory / save_intermediate_structures_root
+                filepath = self._save_directory / save_intermediate_structures_root
                 contact_str = ""
                 for contact in self._port_names_to_contact_names.values():
                     contact_str += f"___{contact}_{self.get_voltage(contact=contact):1.3f}".replace(".", "p")
@@ -603,7 +608,7 @@ class DevsimComponent(LayeredComponentBase):
             notebook = False
 
         if field is None:
-            mesh = meshio.read(file or self.save_directory / self.mesh_filename, file_format="gmsh")
+            mesh = meshio.read(file or self._save_directory / self.mesh_filename, file_format="gmsh")
             annotations = {value[0]: key for key, value in mesh.field_data.items()}
             mesh = pv.wrap(mesh)
             field = "gmsh:physical"
@@ -612,7 +617,7 @@ class DevsimComponent(LayeredComponentBase):
             if cmap is None:
                 cmap = get_distinguishable_colors(register=True)
         else: # go through tecplot for now (fix later)
-            temp_path = file or self.save_directory / self.device_data_filename
+            temp_path = file or self._save_directory / self.device_data_filename
             self.write(file=temp_path.with_suffix(".dat"), type="tecplot")
             reader = pv.get_reader(temp_path)
             mesh = reader.read()
@@ -722,10 +727,10 @@ class DevsimComponent(LayeredComponentBase):
         steps, bisections = refinement.remesh_structure(
             restart_parameters=self.get_generated_parameters(),
             remeshings=remeshings,
-            device_settings_filepath=self.save_directory / self.settings_filename,
+            device_settings_filepath=self._save_directory / self.settings_filename,
             save_intermediate_data_root=save_intermediate_data_root,
             save_intermediate_mesh_root=save_intermediate_mesh_root,
-            final_mesh_filepath=self.save_directory / self.mesh_filename,
+            final_mesh_filepath=self._save_directory / self.mesh_filename,
             default_mincl=default_mincl,
             default_maxcl=default_maxcl,
             max_iterations=max_iterations,
@@ -768,7 +773,7 @@ def initialize(
     device_name: str | None = None,
     device_mesh_name: str | None = None,
     # Save files
-    save_directory: Path | str = None,
+    _save_directory: Path | str = None,
     log_filename: str = "simulation.log",
     error_filename: str = "simulation.err",
     mesh_filename: str = "mesh_initial.msh2",
@@ -819,7 +824,7 @@ def initialize(
 
         ====== Save settings ======
 
-        save_directory: directory where all output is saved. Defaults to PATH.simulation.{hash}
+        _save_directory: directory where all output is saved. Defaults to PATH.simulation.{hash}
         reset_save_directory: if True, deletes previous save_directories of the same name
         log_filename: filename for logging (stdout). Defaults to simulation.log
         append_to_log: if True, appends to an existing log instead of creating a new one
@@ -838,17 +843,17 @@ def initialize(
         warnings.warn("3D simulation may suffer from numerical issues, use at your own risk!", UserWarning)
 
     # Create filepaths
-    save_directory = Path(save_directory)
-    if save_directory.exists() and reset_save_directory:
-        shutil.rmtree(save_directory)
-    save_directory.mkdir(parents=True, exist_ok=True)
-    settings["save_directory"] = save_directory  # update if the argument was None
-    log_filepath = save_directory / log_filename
-    error_filepath = save_directory / error_filename
-    mesh_filepath = save_directory / mesh_filename
-    settings_filepath = save_directory / settings_filename
-    simulation_gds_filepath = save_directory / simulation_gds_filename
-    device_data_filepath = save_directory / device_data_filename
+    _save_directory = Path(_save_directory)
+    if _save_directory.exists() and reset_save_directory:
+        shutil.rmtree(_save_directory)
+    _save_directory.mkdir(parents=True, exist_ok=True)
+    settings["_save_directory"] = _save_directory  # update if the argument was None
+    log_filepath = _save_directory / log_filename
+    error_filepath = _save_directory / error_filename
+    mesh_filepath = _save_directory / mesh_filename
+    settings_filepath = _save_directory / settings_filename
+    simulation_gds_filepath = _save_directory / simulation_gds_filename
+    device_data_filepath = _save_directory / device_data_filename
 
     log_file = open(log_filepath, "a") if append_to_log else open(log_filepath, "w")
     error_file = open(error_filepath, 'a') if append_to_log else open(error_filepath, "w")

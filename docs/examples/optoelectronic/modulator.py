@@ -21,7 +21,6 @@
 # %autoreload 2
 
 from pprint import pprint
-
 import gdsfactory as gf
 import matplotlib.pyplot as plt
 import meshio
@@ -40,6 +39,7 @@ from skfem import Basis, ElementTriP0
 from skfem.io.meshio import from_meshio
 
 from gdevsim import ramp
+from gdevsim.config import PATH
 from gdevsim.meshing import refinement
 from gdevsim.samples.layers_photonic import LAYER, get_layer_stack_photonic
 from gdevsim.samples.optoelectronic import (
@@ -117,6 +117,7 @@ simulation = DevsimComponent(
     mesh_type="uz",
     xsection_bounds=xsection_bounds,
     port_names_to_contact_names={"e_p": "anode", "e_n": "cathode"},
+    save_directory=PATH.simulation / "modulator_tutorial",
 )
 simulation.reset()
 

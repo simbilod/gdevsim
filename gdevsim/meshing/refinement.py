@@ -529,7 +529,7 @@ def remesh_structure(
     """
     with open(device_settings_filepath, "rb") as file:
         settings = dill.load(file)
-        save_directory = Path(settings["save_directory"])
+        save_directory = Path(settings["_save_directory"])
     settings["component"] = gf.import_gds(settings["component"])
 
     # Remeshing
@@ -577,7 +577,7 @@ def remesh_structure(
                 override_field_values(device_name=settings["device_name"],
                                     field_initialization_override_dict=field_initialization_override_dict)
 
-                solve(save_directory = settings["save_directory"],
+                solve(save_directory = settings["_save_directory"],
                         device_data_filename = filename,
                         extended_solver = extended_solver,
                         extended_model = extended_model,
