@@ -13,6 +13,7 @@ import pandas as pd
 import pyvista as pv
 import yaml
 from devsim import set_parameter
+from gdsfactory.geometry.maskprep import over_under_remove_original
 from gdsfactory.typings import Callable, Dict, LayerStack, Tuple
 from gplugins.common.base_models.component import LayeredComponentBase
 from gplugins.common.types import GFComponent
@@ -174,6 +175,7 @@ class DevsimComponent(LayeredComponentBase):
         else:
             port_names = list(self._port_names_to_contact_names.keys())
 
+        # Add net polygons
         simulation_component, simulation_layerstack, port_map = get_component_with_net_layers(
             component=self.component,
             layer_stack=self.layer_stack,
@@ -183,6 +185,12 @@ class DevsimComponent(LayeredComponentBase):
             add_to_layerstack=True,
             additional_layers= [self.wafer_layer]
         )
+
+        # Merge all polygons layer-wise on the Component prior to processing to avoid ill-shaped polygons
+        simulation_component = over_under_remove_original(simulation_component,
+                                                    layers=simulation_component.layers,
+                                                    distances=[gf.get_active_pdk().grid_size] * len(simulation_component.layers)
+                                                    )
 
         contact_name_to_simulation_port_map = {}
         for port_name, port_physical in port_map.items():
@@ -897,6 +905,7 @@ def initialize(
     layer_stack_dopings = layer_stack.filtered(
         [k for k, v in layer_stack.layers.items() if v.layer_type == "doping"]
     )
+
 
     # Generate initial mesh
     print("===============================================================")
