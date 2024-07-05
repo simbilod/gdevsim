@@ -94,16 +94,16 @@ LAYER_VIEWS = ElectronicLayerViews(layers=LAYER)
 
 @dataclass
 class LayerThicknessDefaults:
-    thickness_mim_nitride: int = 200 * nm
-    thickness_viac: int = 1000 * nm
-    thickness_m1: int = 2000 * nm
-    thickness_via1: int = 1000 * nm
-    thickness_m2: int = 2000 * nm
-    thickness_via2: int = 1000 * nm
-    thickness_m3: int = 2000 * nm
-    thickness_via3: int = 1000 * nm
-    thickness_mtop: int = 4000 * nm
-    substrate_thickness: int = 6000 * nm
+    thickness_mim_nitride: float = 200 * nm
+    thickness_viac: float = 1000 * nm
+    thickness_m1: float = 2000 * nm
+    thickness_via1: float = 1000 * nm
+    thickness_m2: float = 2000 * nm
+    thickness_via2: float = 1000 * nm
+    thickness_m3: float = 2000 * nm
+    thickness_via3: float = 1000 * nm
+    thickness_mtop: float = 4000 * nm
+    substrate_thickness: float = 6000 * nm
 
 def get_layer_stack_electronic(thickness_mim_nitride = LayerThicknessDefaults.thickness_mim_nitride,
                                thickness_viac = LayerThicknessDefaults.thickness_viac,
