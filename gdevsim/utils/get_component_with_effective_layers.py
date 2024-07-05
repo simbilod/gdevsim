@@ -2,7 +2,8 @@ import copy
 
 import gdsfactory as gf
 import gdstk
-from gdsfactory.typings import Component, Layers, LayerStack
+import shapely
+from gdsfactory.typings import Component, Dict, Layers, LayerStack, List
 
 
 def get_component_layer_stack(
@@ -85,7 +86,6 @@ def get_component_with_net_layers(
 
         for polygon in polygons:
             # If polygon belongs to port, create a unique new layer, and add the polygon to it
-
             if gdstk.inside(
                 [port.center],
                 gdstk.offset(gdstk.Polygon(polygon), gf.get_active_pdk().grid_size),
@@ -119,6 +119,59 @@ def get_component_with_net_layers(
     net_component.name = f"{component.name}_net_layers"
     return net_component, get_component_layer_stack(net_component, net_layer_stack, additional_layers=additional_layers), port_map
 
+
+
+def get_component_with_propagated_net_layers(component: Component,
+                                       layer_stack: LayerStack,
+                                       propagate_layers: Dict[str, List[str]] | None = None,
+                                       new_layers_init: tuple[int, int] = (20010, 0),
+                                       additional_layers: Layers | None = None,
+                                       delimiter: str = "#",
+                                       ) -> tuple[Component, LayerStack, Dict[str, List[str]]]:
+    """Returns a new component with layers that connect to the provided component."""
+    # Initialize returned component and layerstack
+    net_component = gf.get_component(component).copy()
+    net_layer_stack = layer_stack.model_copy()
+    layer_physical_map = {}
+
+    i = 0
+    for source_layer, destination_layers in propagate_layers.items():
+        source_polygon = net_component.extract(layers=[layer_stack.layers[source_layer].layer]).get_polygons()
+        source_polygon_shapely = shapely.geometry.Polygon(source_polygon[0])
+        all_possible_destination_polygons = net_component.extract(layers=[layer_stack.layers[layer].layer for layer in destination_layers]).get_polygons()
+        for possible_destination_polygon in all_possible_destination_polygons:
+            possible_destination_polygon_shapely = shapely.geometry.Polygon(possible_destination_polygon)
+            if source_polygon_shapely.intersects(possible_destination_polygon_shapely):
+                # We found which set of unified shapes touch the contact; process component
+                for layer in destination_layers:
+                    # Create new logical layer (if not already present)
+                    if f"{layer}{delimiter}{source_layer}" not in net_layer_stack.layers:
+                        layer_number = layer_stack.layers[layer].layer
+                        new_layer_number = (
+                            new_layers_init[0] + i,
+                            0,
+                            )
+                        new_layer = copy.deepcopy(net_layer_stack.layers[layer])
+                        new_layer.layer = (
+                            new_layers_init[0] + i,
+                            0,
+                        )
+                        i += 1
+                        net_layer_stack.layers[f"{layer}{delimiter}{source_layer}"] = new_layer
+                        layer_physical_map[f"{layer}{delimiter}{source_layer}"] = source_layer
+
+                    # Possibly put relevant polygons on that layer
+                    polygons = net_component.extract(layers=[layer_number]).get_polygons()
+                    net_component = net_component.remove_layers(layers=[layer_number])
+                    for polygon in polygons:
+                        polygon_shapely = shapely.geometry.Polygon(polygon)
+                        if polygon_shapely.intersects(possible_destination_polygon_shapely):
+                            net_component.add_polygon(polygon, layer=new_layer_number)
+                        # Otherwise put the polygon back on the same layer
+                        else:
+                            net_component.add_polygon(polygon, layer=layer_number)
+
+    return net_component, get_component_layer_stack(net_component, net_layer_stack, additional_layers=additional_layers), layer_physical_map
 
 if __name__ == "__main__":
     c, ls = get_component_with_net_layers()

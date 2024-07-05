@@ -49,8 +49,10 @@ from gdevsim.models.interpolation import (
 )
 from gdevsim.utils.get_component_with_effective_layers import (
     get_component_with_net_layers,
+    get_component_with_propagated_net_layers,
 )
 from gdevsim.utils.operations import identity
+from gdevsim.utils.parse_layerstack import get_all_metal_layernames
 from gdevsim.visualization import get_distinguishable_colors
 
 
@@ -98,6 +100,7 @@ class DevsimComponent(LayeredComponentBase):
     materials_parameters: Dict = get_all_materials()
     global_parameters: Dict = get_global_parameters()
     physics_parameters: Dict = get_default_physics()
+    enable_metals: bool = False
 
     # Extra space around Component
     pad_xy_inner: NonNegativeFloat = 1.0
@@ -139,7 +142,7 @@ class DevsimComponent(LayeredComponentBase):
 
     @property
     def simulation_inputs(self):
-        return self.get_component_with_net_layers()
+        return self.preprocess_gdsfactory_component()
 
     def contact_interfaces_from_contact(self, contact):
         """Returns all devsim contacts that contain the contact region.
@@ -161,8 +164,14 @@ class DevsimComponent(LayeredComponentBase):
         contact_parameters = [x for x in ds.get_parameter_list(device=self.device_name) if "bias" in x]
         return [contact for contact in contact_parameters if contact_region in contact]
 
-    def get_component_with_net_layers(self):
-        """Computes the temporary Component + LayerStack representing contacts, as well as the mapping between contact_name and DEVSIM contact name."""
+    def preprocess_gdsfactory_component(self):
+        """Contains all logic operating directly on the gdsfactory Component to prepare it for simulation.
+
+        1 - Prepares mapping between contact_name and DEVSIM contact_name
+        2 - Creates fake layers and physicals in the Component to represent contact regions (nets)
+        3 - If metals are not enabled, propagates net polygons
+        4 - Merges all polygons layer-wise on the Component prior to processing to avoid ill-shaped polygons
+        """
 
         if self._port_names_to_contact_names is None:
             port_names = [
@@ -186,6 +195,24 @@ class DevsimComponent(LayeredComponentBase):
             additional_layers= [self.wafer_layer]
         )
 
+        # Propagate net polygons
+        if self.enable_metals:
+            layer_physical_map = None
+            raise NotImplementedError("Metals are currently not modeled -- enable_metals must be False.")
+        else:
+            metal_layernames = get_all_metal_layernames(layerstack=simulation_layerstack,
+                                                        materials_dict=self.materials_parameters,
+                                                        ignore=port_map.values()
+                                                        )
+            simulation_component, simulation_layerstack, layer_physical_map = get_component_with_propagated_net_layers(
+                component=simulation_component,
+                layer_stack=simulation_layerstack,
+                propagate_layers={contact: metal_layernames for contact in port_map.values()},
+                delimiter="#", # not meshed
+                new_layers_init=(20010, 0),
+                additional_layers=[self.wafer_layer]
+            )
+
         # Merge all polygons layer-wise on the Component prior to processing to avoid ill-shaped polygons
         simulation_component = over_under_remove_original(simulation_component,
                                                     layers=simulation_component.layers,
@@ -196,7 +223,7 @@ class DevsimComponent(LayeredComponentBase):
         for port_name, port_physical in port_map.items():
             contact_name_to_simulation_port_map[self._port_names_to_contact_names[port_name]] = port_physical
 
-        return simulation_component, simulation_layerstack, contact_name_to_simulation_port_map
+        return simulation_component, simulation_layerstack, contact_name_to_simulation_port_map, layer_physical_map
 
     def reset(self):
         """Delete all files in the _save_directory."""
@@ -264,6 +291,7 @@ class DevsimComponent(LayeredComponentBase):
             interface_delimiter=self.interface_delimiter,
             contact_delimiter=self.contact_delimiter,
             threads_available=threads_available,
+            layer_physical_map=self.simulation_inputs[3],
             materials_parameters=materials_parameters or self.materials_parameters,
             global_parameters=global_parameters or self.global_parameters,
             physics_parameters=physics_parameters or self.physics_parameters,
@@ -769,6 +797,7 @@ def initialize(
     interface_delimiter: str = "___",
     contact_delimiter: str = "@",
     threads_available: int  = 18,
+    layer_physical_map: Dict[str, str] | None = None,
     # Save settings
     reset_save_directory: bool = False,
     append_to_log: bool = False,
@@ -929,6 +958,7 @@ def initialize(
         global_scaling=global_scaling,
         background_remeshing_file=remeshing_file,
         n_threads=threads_available,
+        layer_physical_map=layer_physical_map,
         # progress_bars=False
     )
 
