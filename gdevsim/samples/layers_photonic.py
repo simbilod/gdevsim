@@ -48,14 +48,32 @@ class GenericLayerMap(LayerMap):
 LAYER = GenericLayerMap()
 
 
+class LayerThicknessDefaults:
+    thickness_wg: float = 0.22
+    thickness_slab: float = 0.09
+    thickness_ge: float = 0.5
+    thickness_viac: float = 1.5
+    thickness_m1: float = 1.0
+    thickness_via1: float = 1.5
+    thickness_m2: float = 1.0
+    thickness_via2: float = 1.5
+    thickness_m3: float = 1.0
+    thickness_box: float = 1
+    thickness_clad: float = 8
+
+
 def get_layer_stack_photonic(
-    thickness_wg=0.22,
-    thickness_slab=0.09,
-    thickness_ge=0.5,
-    thickness_via=1.5,
-    thickness_m1=1.0,
-    thickness_box=1,
-    thickness_clad=3,
+    thickness_wg = LayerThicknessDefaults.thickness_wg,
+    thickness_slab = LayerThicknessDefaults.thickness_slab,
+    thickness_ge = LayerThicknessDefaults.thickness_ge,
+    thickness_viac = LayerThicknessDefaults.thickness_viac,
+    thickness_m1 = LayerThicknessDefaults.thickness_m1,
+    thickness_via1 = LayerThicknessDefaults.thickness_via1,
+    thickness_m2 = LayerThicknessDefaults.thickness_m2,
+    thickness_via2 = LayerThicknessDefaults.thickness_via2,
+    thickness_m3 = LayerThicknessDefaults.thickness_m3,
+    thickness_box = LayerThicknessDefaults.thickness_box,
+    thickness_clad = LayerThicknessDefaults.thickness_clad,
 ) -> LayerStack:
     return LayerStack(
         layers=dict(
@@ -81,13 +99,50 @@ def get_layer_stack_photonic(
                 mesh_order=3,
                 z_to_bias=((0, 1), (0, -1)),
             ),
-            via=LayerLevel(
+            viac=LayerLevel(
                 layer=LAYER.VIAC,
-                thickness=thickness_via + thickness_m1 / 2,
+                thickness=thickness_viac + thickness_m1 / 2,
                 zmin=thickness_slab,
                 material="aluminum",
-                mesh_order=4,
+                mesh_order=5,
                 sidewall_angle=-5,
+            ),
+            m1=LayerLevel(
+                layer=LAYER.M1,
+                thickness=thickness_m1,
+                zmin=thickness_slab + thickness_viac,
+                material="aluminum",
+                mesh_order=4,
+            ),
+            via1=LayerLevel(
+                layer=LAYER.VIA1,
+                thickness=thickness_via1 + thickness_m2 / 2,
+                zmin=thickness_slab + thickness_viac + thickness_m1,
+                material="aluminum",
+                mesh_order=5,
+                sidewall_angle=-5,
+            ),
+            m2=LayerLevel(
+                layer=LAYER.M2,
+                thickness=thickness_m2,
+                zmin=thickness_slab + thickness_viac + thickness_m1 + thickness_via1,
+                material="aluminum",
+                mesh_order=4,
+            ),
+            via2=LayerLevel(
+                layer=LAYER.VIA2,
+                thickness=thickness_via2 + thickness_m3 / 2,
+                zmin=thickness_slab + thickness_viac + thickness_m1 + thickness_via1 + thickness_m2,
+                material="aluminum",
+                mesh_order=5,
+                sidewall_angle=-5,
+            ),
+            m3=LayerLevel(
+                layer=LAYER.M3,
+                thickness=thickness_m3,
+                zmin=thickness_slab + thickness_viac + thickness_m1 + thickness_via1 + thickness_m2 + thickness_via2,
+                material="aluminum",
+                mesh_order=4,
             ),
             box=LayerLevel(
                 layer=LAYER.WAFER,
