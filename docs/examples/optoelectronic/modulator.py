@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.0
+#       jupytext_version: 1.16.2
 #   kernelspec:
 #     display_name: devsim
 #     language: python
@@ -14,7 +14,7 @@
 
 # # Define geometry
 #
-# We define the GDSFactory Component + LayerStack:
+# We define the GDSFactory Component + LayerStack to reproduce the modulator of {cite}`baehr-jonesUltralowDriveVoltage2012`
 
 # +
 # %load_ext autoreload
@@ -26,14 +26,17 @@ import gdsfactory as gf
 import matplotlib.pyplot as plt
 import meshio
 import numpy as np
+import pandas as pd
 import yaml
 from femwell.maxwell.waveguide import compute_modes
 from femwell.pn_analytical import (
     alpha_to_k,
     dalpha_carriers,
     dn_carriers,
+    k_to_alpha_dB,
 )
 from femwell.visualization import plot_domains
+from gdsfactory.components.via_stack import via_stack_slab_m3
 from gdsfactory.cross_section import pn
 from scipy.interpolate import LinearNDInterpolator
 from skfem import Basis, ElementTriP0
@@ -42,12 +45,9 @@ from skfem.io.meshio import from_meshio
 from gdevsim import ramp
 from gdevsim.config import PATH
 from gdevsim.meshing import refinement
-from gdevsim.samples.layers_photonic import LAYER, get_layer_stack_photonic
+from gdevsim.samples.layers_photonic import get_layer_stack_photonic
 from gdevsim.samples.optoelectronic import (
     straight_pn,
-    straight_pn_via_ports,
-    via_stack,
-    viac,
 )
 from gdevsim.simulation import DevsimComponent
 from gdevsim.utils.operations import signed_log
@@ -62,8 +62,8 @@ xs_pn = pn(
             layer = "WG", # core GDS layer
             layer_slab = "SLAB90", # slab GDS layer
             gap_low_doping = 0.0,
-            gap_medium_doping = 0.5,
-            gap_high_doping = 1.0,
+            gap_medium_doping = 0.95 + 0.25,
+            gap_high_doping = 0.95 + 0.25,
             offset_low_doping = 0.0,
             width_doping = 8.0,
             width_slab = 7.0,
@@ -75,24 +75,20 @@ xs_pn = pn(
             layer_npp = "NPP",
          )
 
-straight_pn_simulation = straight_pn_via_ports(straight_pn(length=15,
+straight_pn_simulation = straight_pn(length=15,
                                        cross_section=xs_pn,
-                                        via_stack=gf.partial(via_stack,
-                                                                layers = (None, LAYER.M1,),
-                                                                vias = (viac,),
-                                                            ),
-                                        via_stack_width=2,
-                                        taper=None)
-                                        )
+                                       via_stack_width=3,
+                                       via_stack=gf.partial(via_stack_slab_m3, slot_horizontal=True),
+                                       taper=None)
 
 straight_pn_simulation.plot(show_ports=True)
 
 # +
 layer_stack_photonic = get_layer_stack_photonic()
 
-# Edit the LayerStack parameters
+# Edit the LayerStack parameters to match reported paper values
 layer_stack_photonic.layers["n"].info["peak_concentrations"] = (5E17,)
-layer_stack_photonic.layers["p"].info["peak_concentrations"] = (5E17,)
+layer_stack_photonic.layers["p"].info["peak_concentrations"] = (7E17,)
 
 pprint(layer_stack_photonic.to_dict())
 # -
@@ -104,7 +100,7 @@ pprint(layer_stack_photonic.to_dict())
 # +
 resolutions = {
     "slab": {"resolution": 0.05, "distance": 1.0},
-    "core": {"resolution": 0.02, "distance": 1.0},
+    "core": {"resolution": 0.025, "distance": 1.0},
     "clad": {"resolution": 0.5, "distance": 1.0},
     "box": {"resolution": 0.5, "distance": 1.0},
 }
@@ -117,7 +113,7 @@ simulation = DevsimComponent(
     layer_stack=layer_stack_photonic,
     mesh_type="uz",
     xsection_bounds=xsection_bounds,
-    port_names_to_contact_names={"e_p": "anode", "e_n": "cathode"},
+    port_names_to_contact_names={"top_e1": "anode", "bot_e1": "cathode"},
     save_directory=PATH.simulation / "modulator_tutorial",
 )
 simulation.reset()
@@ -160,7 +156,7 @@ output_filename = simulation.initialize(
 steps = []
 bisections = []
 
-max_iterations_sequence = [2, 3]
+max_iterations_sequence = [1, 2]
 solver_relative_errors_sequence = [1E-10, 1E-12]
 remeshings_sequence = [refinement.default_remeshing_postsolve, refinement.default_remeshing_postsolve]
 solve_flag_sequence = [True, True]
@@ -191,25 +187,27 @@ for i, (max_iterations, solver_relative_errors, remeshings, solve_flag) in enume
 
 # +
 
-# # Prepare data for seaborn
-# for i in range(len(remeshings_sequence)):
-#     data = []
-#     bisection_i = bisections[i]
-#     steps_i = steps[i]
-#     for region, bisection_counts in bisection_i.items():
-#         for step, count in zip(steps_i, bisection_counts):
-#             data.append({'Remeshing step': step, 'Bisections': count, 'Region': region})
-#     df = pd.DataFrame(data)
+# Prepare data for seaborn
+for i in range(len(remeshings_sequence)):
+    data = []
+    bisection_i = bisections[i]
+    steps_i = steps[i]
+    for region, bisection_counts in bisection_i.items():
+        for step, count in zip(steps_i, bisection_counts):
+            data.append({'Remeshing step': step, 'Bisections': count, 'Region': region})
+    df = pd.DataFrame(data)
 
-#     # Plot with seaborn
-#     sns.set_theme(style="whitegrid")
-#     plt.figure(figsize=(10, 6))
-#     plt.title(f"Remeshing stage {i}")
-#     sns.lineplot(data=df, x="Remeshing step", y="Bisections", hue="Region", linewidth=2.5)
-#     plt.xlabel("Remeshing step", fontsize=14)
-#     plt.ylabel("Bisections", fontsize=14)
-#     plt.legend(title="Region", fontsize=12)
-#     plt.show()
+    # Plot with matplotlib
+    plt.figure(figsize=(10, 6))
+    plt.title(f"Remeshing stage {i}")
+    for region in df['Region'].unique():
+        region_data = df[df['Region'] == region]
+        plt.plot(region_data['Remeshing step'], region_data['Bisections'], label=region, linewidth=2.5)
+    plt.xlabel("Remeshing step", fontsize=14)
+    plt.ylabel("Bisections", fontsize=14)
+    plt.legend(title="Region", fontsize=12)
+    plt.grid(True)
+    plt.show()
 
 # -
 
@@ -262,7 +260,7 @@ for f in simulation.save_directory.iterdir():
     if (f.name.startswith("ramp") and f.name.endswith(".ds")):
         with open(f.with_suffix(".yaml")) as file:
             data = yaml.safe_load(file)
-        files_with_voltage.append((f, float(data[simulation.device_name]["slab___via@e_p_bias"])))
+        files_with_voltage.append((f, float(data[simulation.device_name]["slab___m3@top_e1_bias"])))
 
 # Also get the 1D cuts at middle of core
 x = simulation.get_node_field_values(field="x", regions=["core"])
@@ -323,8 +321,8 @@ for subdomain, n in {"core": 3.45,
                      "slab": 3.45,
                      "box": 1.444,
                      "clad": 1.444,
-                     "via@e_n": 1.444, # ignore the contacts
-                     "via@e_p": 1.444, # ignore the contacts
+                     "m3@bot_e1": 1.444, # ignore the contacts
+                     "m3@top_e1": 1.444, # ignore the contacts
                      }.items():
     epsilon[basis0.get_dofs(elements=subdomain)] = n**2
 basis0.plot(epsilon, colorbar=True).show()
@@ -388,8 +386,8 @@ for subdomain, n in {"core": 3.45,
                      "slab": 3.45,
                      "box": 1.444,
                      "clad": 1.444,
-                     "via@e_n": 1.444,
-                     "via@e_p": 1.444,
+                     "m3@bot_e1": 1.444,
+                     "m3@top_e1": 1.444,
                      }.items():
     dofs = mode.basis_epsilon_r.get_dofs(elements=subdomain)
     epsilon[mode.basis_epsilon_r.get_dofs(elements=subdomain)] = (n + dn[dofs])**2
@@ -451,8 +449,8 @@ for _i, (file, voltage) in enumerate(sorted_files[:10]):
                         "slab": 3.45,
                         "box": 1.444,
                         "clad": 1.444,
-                        "via@e_n": 1.444,
-                        "via@e_p": 1.444,
+                        "m3@bot_e1": 1.444,
+                        "m3@top_e1": 1.444,
                         }.items():
         dofs = mode.basis_epsilon_r.get_dofs(elements=subdomain)
         epsilon[mode.basis_epsilon_r.get_dofs(elements=subdomain)] = (n + dn[dofs])**2
@@ -460,10 +458,14 @@ for _i, (file, voltage) in enumerate(sorted_files[:10]):
     neffs[voltage] = mode.calculate_pertubated_neff(epsilon - mode.epsilon_r)
 # -
 
-# plt.plot(neffs_df["voltage"], np.real(neffs_df["neff"]))
-# plt.xlabel("Voltage (V)")
-# plt.ylabel("Effective index shift (a.u.)")
+# Convert neffs dictionary to a DataFrame
+neffs_df = pd.DataFrame(list(neffs.items()), columns=['voltage', 'neff'])
 
-# plt.plot(neffs_df["voltage"], k_to_alpha_dB(np.imag(neffs_df["neff"]), wavelength=1.55))
-# plt.xlabel("Voltage (V)")
-# plt.ylabel("Absorption (dB/cm)")
+
+plt.plot(neffs_df["voltage"], np.real(neffs_df["neff"]))
+plt.xlabel("Voltage (V)")
+plt.ylabel("Effective index shift (a.u.)")
+
+plt.plot(neffs_df["voltage"], k_to_alpha_dB(np.imag(neffs_df["neff"]), wavelength=1.55))
+plt.xlabel("Voltage (V)")
+plt.ylabel("Absorption (dB/cm)")
