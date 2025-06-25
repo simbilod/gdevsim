@@ -22,11 +22,15 @@ dependencies = [
     "mkl",
     "devsim",
     "matplotlib",
-    "gdsfactory<7.13",
+    "gdsfactory==7.22.2",
     "gplugins<0.11.0",
     "dill",
     "pyvista",
-    "meshwell==1.0.7"
+    "meshwell==1.0.7",
+    "femwell",
+    "ray",
+    "seaborn",
+    "pre-commit"
 ]
 readme = "README.md"
 requires-python = "<3.12"
